@@ -8,7 +8,10 @@
       </div>
       <nav class="nav">
         <router-link to="/" class="nav-link" @click="isSidebarOpen = false">
-          <span class="icon">💬</span> Dashboard
+          <span class="icon">📊</span> Dashboard
+        </router-link>
+        <router-link to="/messages" class="nav-link" @click="isSidebarOpen = false">
+          <span class="icon">💬</span> Messages
         </router-link>
         <router-link to="/profile" class="nav-link" @click="isSidebarOpen = false">
           <span class="icon">👤</span> Profil

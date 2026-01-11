@@ -4,6 +4,7 @@ import MainLayout from '@/components/MainLayout.vue'
 import Login from '@/views/Login.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import Profile from '@/views/Profile.vue'
+import WhatsappMessages from '@/views/WhatsappMessages.vue'
 
 const routes = [
   {
@@ -26,6 +27,11 @@ const routes = [
         path: 'profile',
         name: 'Profile',
         component: Profile,
+      },
+      {
+        path: 'messages',
+        name: 'Messages',
+        component: WhatsappMessages,
       },
     ],
   },
