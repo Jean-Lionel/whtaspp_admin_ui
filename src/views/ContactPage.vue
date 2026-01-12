@@ -242,7 +242,7 @@ const getInitials = (name) => {
 .contact-page {
   padding: 2rem;
   font-family: 'Inter', sans-serif;
-  color: #e2e8f0;
+  color: #1e293b;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -282,16 +282,16 @@ const getInitials = (name) => {
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .search-input {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border-radius: 12px;
-  border: 1px solid #334155;
-  background: #1e293b;
-  color: white;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #1e293b;
   transition: all 0.3s ease;
 }
 
@@ -327,9 +327,9 @@ const getInitials = (name) => {
 }
 
 .btn-secondary {
-  background: #334155;
-  color: white;
-  border: none;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
   padding: 0.75rem 1.5rem;
   border-radius: 12px;
   font-weight: 600;
@@ -338,17 +338,19 @@ const getInitials = (name) => {
 }
 
 .btn-secondary:hover {
-  background: #475569;
+  background: #e2e8f0;
+  color: #1e293b;
 }
 
 /* Table container styling */
 .table-container {
-  background: #1e293b;
+  background: white;
   border-radius: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
-  border: 1px solid #334155;
+  border: 1px solid #e2e8f0;
   margin-bottom: 1.5rem;
+  position: relative; /* needed for sticky elements if any */
 }
 
 .contacts-table {
@@ -359,19 +361,19 @@ const getInitials = (name) => {
 
 .contacts-table th {
   padding: 1rem 1.5rem;
-  background: #0f172a;
-  color: #94a3b8;
+  background: #f8fafc;
+  color: #64748b;
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .contacts-table td {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #334155;
-  color: #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
   font-size: 0.95rem;
   vertical-align: middle;
 }
@@ -381,7 +383,7 @@ const getInitials = (name) => {
 }
 
 .contacts-table tr:hover {
-  background: #27354f; /* Slightly lighter than row bg */
+  background: #f8fafc; /* Slightly lighter than row bg */
 }
 
 /* User Info Cell */
@@ -406,7 +408,7 @@ const getInitials = (name) => {
 
 .user-name {
   font-weight: 500;
-  color: white;
+  color: #1e293b;
 }
 
 /* Action Buttons */
@@ -426,13 +428,13 @@ const getInitials = (name) => {
 }
 
 .btn-icon.edit:hover {
-  color: #60a5fa;
-  background: rgba(96, 165, 250, 0.1);
+  color: #3b82f6;
+  background: #eff6ff;
 }
 
 .btn-icon.delete:hover {
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.1);
+  color: #ef4444;
+  background: #fef2f2;
 }
 
 /* Pagination */
@@ -445,16 +447,16 @@ const getInitials = (name) => {
 .pagination {
   display: flex;
   gap: 0.25rem;
-  background: #1e293b;
+  background: white;
   padding: 0.5rem;
   border-radius: 12px;
-  border: 1px solid #334155;
+  border: 1px solid #e2e8f0;
 }
 
 .pagination button {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #64748b;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   cursor: pointer;
@@ -463,8 +465,8 @@ const getInitials = (name) => {
 }
 
 .pagination button:hover:not(:disabled) {
-  background: #334155;
-  color: white;
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
 .pagination button.active {
@@ -484,7 +486,7 @@ const getInitials = (name) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5); /* Slightly lighter overlay */
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -493,19 +495,19 @@ const getInitials = (name) => {
 }
 
 .modal-content {
-  background: #1e293b;
+  background: white;
   border-radius: 16px;
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-  border: 1px solid #334155;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
   overflow: hidden;
   animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .modal-header {
   padding: 1.5rem;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -514,6 +516,7 @@ const getInitials = (name) => {
 .modal-header h2 {
   margin: 0;
   font-size: 1.25rem;
+  color: #1e293b;
 }
 
 .close-btn {
@@ -526,7 +529,7 @@ const getInitials = (name) => {
 }
 
 .close-btn:hover {
-  color: white;
+  color: #1e293b;
 }
 
 .modal-body {
@@ -549,32 +552,35 @@ const getInitials = (name) => {
 label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #cbd5e1;
+  color: #475569;
   font-size: 0.9rem;
+  font-weight: 500;
 }
 
 input {
   width: 100%;
   padding: 0.75rem;
-  background: #0f172a;
-  border: 1px solid #334155;
+  background: white;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  color: white;
+  color: #1e293b;
   transition: border-color 0.2s;
   box-sizing: border-box; 
 }
 
 input:focus {
   outline: none;
-  border-color: #60a5fa;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 .modal-footer {
   padding: 1.5rem;
-  background: #0f172a;
+  background: #f8fafc;
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+  border-top: 1px solid #e2e8f0;
 }
 
 /* Animations */
@@ -603,7 +609,7 @@ input:focus {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #334155;
+  border: 4px solid #e2e8f0;
   border-top-color: #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -615,7 +621,7 @@ input:focus {
 
 .empty-state {
   text-align: center;
-  color: #94a3b8;
+  color: #64748b;
   padding: 3rem !important;
 }
 </style>
