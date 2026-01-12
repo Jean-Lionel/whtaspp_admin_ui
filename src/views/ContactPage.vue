@@ -5,11 +5,11 @@
       <div class="actions">
         <div class="search-wrapper">
           <i class="bi bi-search search-icon"></i>
-          <input 
-            type="text" 
-            v-model="searchQuery" 
-            @input="handleSearch" 
-            placeholder="Search contacts..." 
+          <input
+            type="text"
+            v-model="searchQuery"
+            @input="handleSearch"
+            placeholder="Search contacts..."
             class="search-input"
           />
         </div>
@@ -23,7 +23,7 @@
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
       </div>
-      
+
       <table v-else class="contacts-table">
         <thead>
           <tr>
@@ -64,11 +64,11 @@
     <!-- Pagination -->
     <div class="pagination-container" v-if="contacts.links && contacts.links.length > 3">
       <div class="pagination">
-        <button 
-          v-for="(link, index) in contacts.links" 
+        <button
+          v-for="(link, index) in contacts.links"
           :key="index"
           :disabled="!link.url || link.active"
-          :class="{ 'active': link.active }"
+          :class="{ active: link.active }"
           @click="changePage(link.url)"
           v-html="link.label"
         ></button>
@@ -116,125 +116,127 @@
 </template>
 
 <script setup>
-import api from '@/config/axios';
-import { ref, onMounted, reactive } from 'vue';
+import api from '@/config/axios'
+import { ref, onMounted, reactive, computed } from 'vue'
+import store from '@/store'
 
-const contacts = ref({});
-const loading = ref(false);
-const searchQuery = ref('');
-const showModal = ref(false);
-const isEditing = ref(false);
-const saving = ref(false);
-const currentContactId = ref(null);
+const loading = ref(false)
+const searchQuery = ref('')
+const showModal = ref(false)
+const isEditing = ref(false)
+const saving = ref(false)
+const currentContactId = ref(null)
 
 const form = reactive({
   name: '',
   email: '',
   phone: '',
-  country_code: ''
-});
+  country_code: '',
+})
 
 onMounted(() => {
-  getContacts();
-});
+  getContacts()
+})
 
 const getContacts = (url = '/contacts') => {
-  loading.value = true;
+  loading.value = true
   // If url is full url (from pagination), use it, otherwise append params
-  const isFullUrl = url.startsWith('http');
-  const requestUrl = isFullUrl ? url : url;
-  
-  const params = {};
+  const isFullUrl = url.startsWith('http')
+  const requestUrl = isFullUrl ? url : url
+
+  const params = {}
   if (searchQuery.value) {
-      params.search = searchQuery.value;
+    params.search = searchQuery.value
   }
 
   // To support search properly with pagination, usually we pass params.
   // We'll pass search param always if not empty.
-  api.get(requestUrl, { params })
+  api
+    .get(requestUrl, { params })
     .then((response) => {
-      contacts.value = response.data;
+      store.state.data.contacts = response.data
     })
     .finally(() => {
-      loading.value = false;
-    });
-};
+      loading.value = false
+    })
+}
 
-let debounceTimer = null;
+let debounceTimer = null
 const handleSearch = () => {
-  clearTimeout(debounceTimer);
+  clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
     // Reset to page 1 when searching
-    getContacts('/contacts');
-  }, 300);
-};
+    getContacts('/contacts')
+  }, 300)
+}
+
+const contacts = computed(() => store.state.data.contacts)
 
 const changePage = (url) => {
   if (url) {
-      getContacts(url);
+    getContacts(url)
   }
-};
+}
 
 const openAddModal = () => {
-  isEditing.value = false;
-  currentContactId.value = null;
-  form.name = '';
-  form.email = '';
-  form.phone = '';
-  form.country_code = '';
-  showModal.value = true;
-};
+  isEditing.value = false
+  currentContactId.value = null
+  form.name = ''
+  form.email = ''
+  form.phone = ''
+  form.country_code = ''
+  showModal.value = true
+}
 
 const openEditModal = (contact) => {
-  isEditing.value = true;
-  currentContactId.value = contact.id;
-  form.name = contact.name;
-  form.email = contact.email;
-  form.phone = contact.phone;
-  form.country_code = contact.country_code || '';
-  showModal.value = true;
-};
+  isEditing.value = true
+  currentContactId.value = contact.id
+  form.name = contact.name
+  form.email = contact.email
+  form.phone = contact.phone
+  form.country_code = contact.country_code || ''
+  showModal.value = true
+}
 
 const closeModal = () => {
-  showModal.value = false;
-};
+  showModal.value = false
+}
 
 const saveContact = () => {
-  saving.value = true;
-  const payload = { ...form };
-  
-  const request = isEditing.value 
+  saving.value = true
+  const payload = { ...form }
+
+  const request = isEditing.value
     ? api.put(`/contacts/${currentContactId.value}`, payload)
-    : api.post('/contacts', payload);
+    : api.post('/contacts', payload)
 
   request
     .then(() => {
-      closeModal();
-      getContacts();
+      closeModal()
+      getContacts()
     })
-    .catch(err => {
-      console.error("Failed to save contact", err);
+    .catch((err) => {
+      console.error('Failed to save contact', err)
     })
     .finally(() => {
-      saving.value = false;
-    });
-};
+      saving.value = false
+    })
+}
 
 const deleteContact = (id) => {
   if (confirm('Are you sure you want to delete this contact?')) {
-    api.delete(`/contacts/${id}`)
-      .then(() => {
-        getContacts();
-      });
+    api.delete(`/contacts/${id}`).then(() => {
+      getContacts()
+    })
   }
-};
+}
 
 const getInitials = (name) => {
-  if (!name) return '';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-};
+  if (!name) return ''
+  const parts = name.split(' ')
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase()
+}
 </script>
 
 <style scoped>
@@ -313,8 +315,12 @@ const getInitials = (name) => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .btn-primary:hover {
@@ -346,7 +352,9 @@ const getInitials = (name) => {
 .table-container {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   border: 1px solid #e2e8f0;
   margin-bottom: 1.5rem;
@@ -499,7 +507,9 @@ const getInitials = (name) => {
   border-radius: 16px;
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border: 1px solid #e2e8f0;
   overflow: hidden;
   animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -565,7 +575,7 @@ input {
   border-radius: 8px;
   color: #1e293b;
   transition: border-color 0.2s;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
 input:focus {
@@ -585,8 +595,14 @@ input:focus {
 
 /* Animations */
 @keyframes modalPop {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-enter-active,
@@ -616,7 +632,9 @@ input:focus {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-state {
