@@ -1,32 +1,33 @@
 <template>
   <div class="layout">
     <div :class="['overlay', { show: isMobileOpen }]" @click="closeMobileSidebar"></div>
-    
-    <aside :class="['sidebar', { 'desktop-hidden': !isDesktopVisible, 'mobile-open': isMobileOpen }]">
+
+    <aside
+      :class="['sidebar', { 'desktop-hidden': !isDesktopVisible, 'mobile-open': isMobileOpen }]"
+    >
       <div class="brand">
         <h2 v-if="isDesktopVisible">WhatsApp Admin</h2>
-        <h2 v-else>WA</h2> <!-- Mini brand when collapsed if we went that route, but here we hide it mostly or keep it? -->
+        <h2 v-else>WA</h2>
+        <!-- Mini brand when collapsed if we went that route, but here we hide it mostly or keep it? -->
         <button class="close-btn-mobile" @click="closeMobileSidebar">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
-      
+
       <nav class="nav">
         <router-link to="/" class="nav-link" @click="handleNavClick">
           <i class="bi bi-speedometer2 icon"></i>
           <span class="link-text">Dashboard</span>
         </router-link>
-        <router-link to="/messages" class="nav-link" @click="handleNavClick">
-          <i class="bi bi-chat-dots icon"></i>
-          <span class="link-text">Messages</span>
-        </router-link>
-        <router-link to="/contacts" class="nav-link" @click="handleNavClick">
-          <i class="bi bi-people icon"></i>
-          <span class="link-text">Contacts</span>
-        </router-link>
-        <router-link to="/profile" class="nav-link" @click="handleNavClick">
-          <i class="bi bi-person icon"></i>
-          <span class="link-text">Profil</span>
+        <router-link
+          v-for="url in urls"
+          :key="url.to"
+          :to="url.to"
+          class="nav-link"
+          @click="handleNavClick"
+        >
+          <i :class="url.icon"></i>
+          <span class="link-text">{{ url.name }}</span>
         </router-link>
       </nav>
 
@@ -64,6 +65,29 @@ import { useRouter } from 'vue-router'
 
 const store = useStore()
 const router = useRouter()
+
+const urls = [
+  {
+    to: '/profile',
+    name: 'Profile',
+    icon: 'bi bi-person icon',
+  },
+  {
+    to: '/messages',
+    name: 'Messages',
+    icon: 'bi bi-chat-dots icon',
+  },
+  {
+    to: '/contacts',
+    name: 'Contacts',
+    icon: 'bi bi-people icon',
+  },
+  {
+    to: '/blogs',
+    name: 'Blogs',
+    icon: 'bi bi-file-text icon',
+  },
+]
 
 // State
 const isDesktopVisible = ref(true)
@@ -134,7 +158,7 @@ onUnmounted(() => {
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -152,8 +176,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  background-color: rgba(0,0,0,0.1);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background-color: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .brand h2 {
@@ -185,7 +209,7 @@ onUnmounted(() => {
 }
 
 .nav-link:hover {
-  background-color: rgba(255,255,255,0.1);
+  background-color: rgba(255, 255, 255, 0.1);
   transform: translateX(5px);
 }
 
@@ -216,7 +240,7 @@ onUnmounted(() => {
 /* Logout */
 .logout-section {
   padding: 20px;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logout-btn {
