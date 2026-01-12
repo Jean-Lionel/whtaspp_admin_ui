@@ -5,6 +5,7 @@ import Login from '@/views/Login.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import Profile from '@/views/Profile.vue'
 import WhatsappMessages from '@/views/WhatsappMessages.vue'
+import ContactPage from '@/views/ContactPage.vue'
 
 const routes = [
   {
@@ -32,6 +33,11 @@ const routes = [
         path: 'messages',
         name: 'Messages',
         component: WhatsappMessages,
+      },
+      {
+        path: 'contacts',
+        name: 'Contacts',
+        component: ContactPage,
       },
     ],
   },

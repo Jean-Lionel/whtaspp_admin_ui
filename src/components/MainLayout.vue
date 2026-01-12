@@ -20,6 +20,10 @@
           <i class="bi bi-chat-dots icon"></i>
           <span class="link-text">Messages</span>
         </router-link>
+        <router-link to="/contacts" class="nav-link" @click="handleNavClick">
+          <i class="bi bi-people icon"></i>
+          <span class="link-text">Contacts</span>
+        </router-link>
         <router-link to="/profile" class="nav-link" @click="handleNavClick">
           <i class="bi bi-person icon"></i>
           <span class="link-text">Profil</span>

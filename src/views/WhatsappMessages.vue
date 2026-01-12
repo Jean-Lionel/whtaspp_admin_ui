@@ -21,6 +21,7 @@ import { ref } from 'vue'
 import ChatSidebar from '@/components/whatsapp/ChatSidebar.vue'
 import ChatWindow from '@/components/whatsapp/ChatWindow.vue'
 import EmptyChatState from '@/components/whatsapp/EmptyChatState.vue'
+import api from '@/config/axios'
 
 const selectedChat = ref(null)
 
@@ -106,6 +107,14 @@ const handleSendMessage = (text) => {
     sender_id: 1, // ID de l'admin
     type: 'text'
   }
+
+  api.post('/messages', messagePayload)
+    .then(response => {
+      console.log('Message envoyé avec succès:', response.data)
+    })
+    .catch(error => {
+      console.error('Erreur lors de l\'envoi du message:', error)
+    })
 
   console.log('Payload prêt pour le backend:', messagePayload)
   
