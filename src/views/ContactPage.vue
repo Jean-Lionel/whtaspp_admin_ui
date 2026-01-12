@@ -170,7 +170,7 @@ const handleSearch = () => {
   }, 300)
 }
 
-const contacts = computed(() => store.state.data.contacts)
+const contacts = computed(() => store.state.data.contacts || [])
 
 const changePage = (url) => {
   if (url) {
