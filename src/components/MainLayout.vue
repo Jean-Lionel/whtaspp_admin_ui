@@ -15,10 +15,6 @@
       </div>
 
       <nav class="nav">
-        <router-link to="/" class="nav-link" @click="handleNavClick">
-          <i class="bi bi-speedometer2 icon"></i>
-          <span class="link-text">Dashboard</span>
-        </router-link>
         <router-link
           v-for="url in urls"
           :key="url.to"
@@ -68,9 +64,9 @@ const router = useRouter()
 
 const urls = [
   {
-    to: '/profile',
-    name: 'Profile',
-    icon: 'bi bi-person icon',
+    to: '/',
+    name: 'Dashboard',
+    icon: 'bi bi-speedometer2 icon',
   },
   {
     to: '/messages',

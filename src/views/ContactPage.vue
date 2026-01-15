@@ -20,7 +20,7 @@
     </div>
 
     <div class="table-container">
-      <div v-if="loading && contacts.data.length === 0" class="loading-state">
+      <div v-if="loading && contacts?.data?.length === 0" class="loading-state">
         <div class="spinner"></div>
       </div>
 
