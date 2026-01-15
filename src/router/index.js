@@ -7,6 +7,8 @@ import Profile from '@/views/Profile.vue'
 import WhatsappMessages from '@/views/WhatsappMessages.vue'
 import ContactPage from '@/views/ContactPage.vue'
 import BlogPage from '@/views/BlogPage.vue'
+import Groups from '@/views/Groups.vue'
+import GroupDetail from '@/views/GroupDetail.vue'
 
 const routes = [
   {
@@ -39,6 +41,16 @@ const routes = [
         path: 'contacts',
         name: 'Contacts',
         component: ContactPage,
+      },
+      {
+        path: 'groups',
+        name: 'Groups',
+        component: Groups,
+      },
+      {
+        path: 'groups/:id',
+        name: 'GroupDetail',
+        component: GroupDetail,
       },
       {
         path: 'blogs',

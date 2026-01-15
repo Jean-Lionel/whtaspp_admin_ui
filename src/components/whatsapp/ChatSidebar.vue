@@ -5,210 +5,208 @@
         <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="User Avatar" />
       </div>
       <div class="header-icons">
-        <button class="icon-btn" title="New Chat">
-             <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M19.005 3.175H4.674C3.642 3.175 3 3.789 3 4.821V21.02l3.544-3.514h12.461c1.033 0 2.064-1.06 2.064-2.093V4.821c-.001-1.032-1.032-1.646-2.064-1.646zm-4.989 9.869H7.041V11.1h6.975v1.944zm3.938-3.621H7.041V7.48h10.913v1.943z"></path></svg>
+        <button class="icon-btn" title="Nouveau groupe" @click="showCreateGroup = true">
+          <i class="bi bi-people-fill"></i>
         </button>
         <button class="icon-btn" title="Menu">
-          <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M12 7a2 2 0 1 0-.001-4.001A2 2 0 0 0 12 7zm0 2a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 9zm0 6a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 15z"></path></svg>
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M12 7a2 2 0 1 0-.001-4.001A2 2 0 0 0 12 7zm0 2a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 9zm0 6a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 15z"></path></svg>
         </button>
-      </div>
-    </div>
-    
-    <div class="search-bar">
-      <div class="search-input-wrapper">
-        <span class="search-icon">
-          <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M15.009 13.805h-.636l-.22-.219a5.184 5.184 0 1 0-5.56 5.561l.219.22h.635l5.44 5.44 1.62-1.62-5.498-5.382zm-9.228-5.38a3.879 3.879 0 1 1 3.879 3.879 3.882 3.882 0 0 1-3.879-3.879z"></path></svg>
-        </span>
-        <input type="text" placeholder="Rechercher ou démarrer une discussion" v-model="searchQuery" />
       </div>
     </div>
 
-    <div class="chat-list" @scroll="handleScroll">
-      <div 
-        v-for="chat in filteredChats" 
-        :key="chat.id || chat.phone" 
-        class="chat-item" 
-        :class="{ active: selectedChat && selectedChat.id === chat.id }"
-        @click="$emit('select-chat', chat)"
-      >
-        <div class="chat-avatar">
-          <img :src="chat.avatar || `https://ui-avatars.com/api/?name=${chat.name || chat.phone}&background=random`" alt="Avatar" />
-        </div>
-        <div class="chat-info">
-          <div class="chat-top-row">
-            <span class="chat-name">{{ chat.name || chat.phone }}</span>
-            <span class="chat-time">{{ formatTime(chat.lastMessageTime) }}</span>
-          </div>
-          <div class="chat-bottom-row">
-            <span class="chat-last-message">{{ chat.lastMessage }}</span>
-            <span v-if="chat.unreadCount > 0" class="unread-badge">{{ chat.unreadCount }}</span>
-          </div>
-        </div>
+    <div class="search-bar">
+      <div class="search-input-wrapper">
+        <span class="search-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M15.009 13.805h-.636l-.22-.219a5.184 5.184 0 1 0-5.56 5.561l.219.22h.635l5.44 5.44 1.62-1.62-5.498-5.382zm-9.228-5.38a3.879 3.879 0 1 1 3.879 3.879 3.882 3.882 0 0 1-3.879-3.879z"></path></svg>
+        </span>
+        <input type="text" placeholder="Rechercher ou demarrer une discussion" v-model="searchQuery" />
       </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="filter-tabs">
+      <button
+        class="filter-tab"
+        :class="{ active: activeFilter === 'all' }"
+        @click="activeFilter = 'all'"
+      >
+        Tout
+      </button>
+      <button
+        class="filter-tab"
+        :class="{ active: activeFilter === 'contacts' }"
+        @click="activeFilter = 'contacts'"
+      >
+        Contacts
+      </button>
+      <button
+        class="filter-tab"
+        :class="{ active: activeFilter === 'groups' }"
+        @click="activeFilter = 'groups'"
+      >
+        Groupes
+      </button>
+    </div>
+
+    <div class="chat-list" @scroll="handleScroll">
+      <SidebarItem
+        v-for="item in filteredItems"
+        :key="`${item.type}-${item.id}`"
+        :item="item"
+        :selected="isSelected(item)"
+        @click="handleSelectItem"
+      />
+
       <div v-if="loading" class="loading-spinner">
         <svg viewBox="0 0 24 24" width="24" height="24" class="spinner-icon"><path fill="currentColor" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"></path></svg>
       </div>
-      <div v-else-if="!hasMore && filteredChats.length > 0" class="end-of-list">
-        Fin de la liste
+
+      <div v-else-if="filteredItems.length === 0" class="empty-state">
+        <i class="bi bi-chat-text"></i>
+        <p>Aucune conversation</p>
       </div>
     </div>
+
+    <!-- Modal de creation de groupe -->
+    <GroupCreateModal
+      v-if="showCreateGroup"
+      @close="showCreateGroup = false"
+      @created="handleGroupCreated"
+    />
   </div>
 </template>
 
 <script setup>
-import api from '@/config/axios';
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+import api from '@/config/axios'
+import SidebarItem from './SidebarItem.vue'
+import GroupCreateModal from './GroupCreateModal.vue'
 
-const store = useStore();
-const searchQuery = ref('');
-const loading = ref(false);
-const hasMore = ref(true);
+const store = useStore()
+const router = useRouter()
+const searchQuery = ref('')
+const loading = ref(false)
+const activeFilter = ref('all')
+const showCreateGroup = ref(false)
+const sidebarData = ref([])
 
 const props = defineProps({
-  chats: {
-    type: Array,
-    default: () => []
-  },
   selectedChat: {
     type: Object,
     default: null
   }
 })
 
-defineEmits(['select-chat'])
+const emit = defineEmits(['select-chat', 'select-group'])
 
 onMounted(() => {
-  getChats();
-});
-
-const getChats = (page = 1) => {
-  loading.value = true;
-  api.get('/side_bar_contacts', {
-    params: {
-      page: page
-    }
-  })
-    .then(response => {
-      store.state.data.chatsContacts = response.data;
-      // Vérifier s'il y a plus de pages
-      hasMore.value = response.data.current_page < response.data.last_page;
-    })
-    .catch(error => {
-      console.error('Error fetching chats:', error);
-    })
-    .finally(() => {
-      loading.value = false;
-    });
-}
-
-const chatsContacts = computed(() => {
-  return store.state.data.chatsContacts || {};
+  fetchSidebarData()
 })
 
-const filteredChats = computed(() => {
-  const sourceData = chatsContacts.value.data || [];
-
-  const formattedData = sourceData.map(chat => ({
-    ...chat,
-    id: chat.id || chat.phone,
-    name: chat.name,
-    phone: chat.phone,
-    lastMessage: chat.last_message,
-    lastMessageTime: chat.last_message_at,
-    unreadCount: chat.unread_count,
-    avatar: chat.avatar
-  }));
-
-  if (!searchQuery.value) return formattedData;
-
-  return formattedData.filter(chat => {
-    const term = searchQuery.value.toLowerCase();
-    const nameMatch = chat.name && chat.name.toLowerCase().includes(term);
-    const phoneMatch = chat.phone && chat.phone.includes(term);
-    return nameMatch || phoneMatch;
-  });
-})
-
-let scrollTimeout = null;
-const handleScroll = (e) => {
-  if (loading.value || !hasMore.value) return;
-  if (scrollTimeout) return;
-
-  scrollTimeout = setTimeout(() => {
-    const element = e.target;
-    // Check if close to bottom (100px threshold)
-    if (element.scrollHeight - element.scrollTop - element.clientHeight < 100) {
-      loadMoreChats();
+const fetchSidebarData = async () => {
+  loading.value = true
+  try {
+    const response = await api.get('/sidebar')
+    sidebarData.value = response.data
+  } catch (error) {
+    console.error('Error fetching sidebar:', error)
+    // Fallback to old endpoint if new one not available
+    try {
+      const fallbackResponse = await api.get('/side_bar_contacts')
+      sidebarData.value = (fallbackResponse.data.data || []).map(item => ({
+        ...item,
+        type: 'contact',
+        last_message: item.last_message,
+        last_message_at: item.last_message_at,
+        unread_count: item.unread_count
+      }))
+    } catch (fallbackError) {
+      console.error('Fallback also failed:', fallbackError)
     }
-    scrollTimeout = null;
-  }, 100);
+  } finally {
+    loading.value = false
+  }
 }
 
-const loadMoreChats = () => {
-  if (loading.value || !hasMore.value) return;
+const filteredItems = computed(() => {
+  let items = sidebarData.value || []
 
-  const metadata = chatsContacts.value;
-  if (!metadata || !metadata.current_page) return;
-
-  const currentPage = parseInt(metadata.current_page);
-  const lastPage = parseInt(metadata.last_page);
-
-  // Stop if we are already at the last page
-  if (currentPage >= lastPage) {
-    hasMore.value = false;
-    return;
+  // Filter by type
+  if (activeFilter.value === 'contacts') {
+    items = items.filter(item => item.type === 'contact')
+  } else if (activeFilter.value === 'groups') {
+    items = items.filter(item => item.type === 'group')
   }
 
-  const nextPage = currentPage + 1;
-  console.log(`Loading page ${nextPage} of ${lastPage}`);
-
-  loading.value = true;
-
-  api.get("/side_bar_contacts", {
-    params: {
-      page: nextPage
-    }
-  })
-    .then(response => {
-      const newData = response.data;
-      const currentChats = store.state.data.chatsContacts.data || [];
-
-      console.log('Loaded new chats:', newData.data.length);
-
-      // Update store with new data and new metadata (e.g. current_page becomes 2, etc.)
-      store.state.data.chatsContacts = {
-        ...newData,
-        data: [...currentChats, ...newData.data]
-      };
-
-      // Mettre à jour hasMore
-      hasMore.value = newData.current_page < newData.last_page;
+  // Filter by search query
+  if (searchQuery.value) {
+    const term = searchQuery.value.toLowerCase()
+    items = items.filter(item => {
+      const nameMatch = item.name && item.name.toLowerCase().includes(term)
+      const phoneMatch = item.phone && item.phone.includes(term)
+      return nameMatch || phoneMatch
     })
-    .catch(error => {
-      console.error("Error loading more chats", error);
-    })
-    .finally(() => {
-      loading.value = false;
-    });
+  }
+
+  return items
+})
+
+const isSelected = (item) => {
+  if (!props.selectedChat) return false
+  return props.selectedChat.type === item.type && props.selectedChat.id === item.id
 }
 
-// Nettoyer le timeout au démontage
+const handleSelectItem = (item) => {
+  if (item.type === 'group') {
+    emit('select-group', item)
+    router.push(`/groups/${item.id}`)
+  } else {
+    emit('select-chat', {
+      ...item,
+      id: item.id || item.phone,
+      name: item.name,
+      phone: item.phone,
+      lastMessage: item.last_message,
+      lastMessageTime: item.last_message_at,
+      unreadCount: item.unread_count,
+      avatar: item.avatar
+    })
+  }
+}
+
+const handleGroupCreated = (group) => {
+  showCreateGroup.value = false
+  // Add the new group to the sidebar
+  sidebarData.value.unshift({
+    ...group,
+    type: 'group',
+    last_message: null,
+    last_message_at: group.created_at
+  })
+  // Navigate to the group
+  router.push(`/groups/${group.id}`)
+}
+
+let scrollTimeout = null
+const handleScroll = (e) => {
+  // Scroll handling for future pagination if needed
+}
+
 onUnmounted(() => {
   if (scrollTimeout) {
-    clearTimeout(scrollTimeout);
+    clearTimeout(scrollTimeout)
   }
 })
 
-const formatTime = (isoString) => {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
+// Expose refresh method for parent components
+defineExpose({
+  refresh: fetchSidebarData
+})
 </script>
 
 <style scoped>
-/* Sidebar Styles */
 .sidebar {
   width: 30%;
   max-width: 420px;
@@ -240,7 +238,7 @@ const formatTime = (isoString) => {
 
 .header-icons {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   color: #54656f;
 }
 
@@ -254,6 +252,12 @@ const formatTime = (isoString) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1.2rem;
+  transition: background-color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .search-bar {
@@ -286,6 +290,34 @@ const formatTime = (isoString) => {
   color: #3b4a54;
 }
 
+.filter-tabs {
+  display: flex;
+  padding: 8px 12px;
+  gap: 8px;
+  border-bottom: 1px solid #e9edef;
+  background-color: white;
+}
+
+.filter-tab {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 20px;
+  background-color: #f0f2f5;
+  color: #54656f;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-tab:hover {
+  background-color: #e9edef;
+}
+
+.filter-tab.active {
+  background-color: #e7fce8;
+  color: #00a884;
+}
+
 .chat-list {
   flex: 1;
   overflow-y: auto;
@@ -293,102 +325,10 @@ const formatTime = (isoString) => {
   background-color: white;
 }
 
-.chat-item {
-  display: flex;
-  padding: 0 15px;
-  height: 72px;
-  cursor: pointer;
-  align-items: center;
-  position: relative;
-}
-
-.chat-item:hover {
-  background-color: #f5f6f6;
-}
-
-.chat-item.active {
-  background-color: #f0f2f5;
-}
-
-.chat-avatar {
-  margin-right: 15px;
-  flex-shrink: 0;
-}
-
-.chat-avatar img {
-  width: 49px;
-  height: 49px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.chat-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 100%;
-  border-bottom: 1px solid #e9edef;
-  padding-right: 15px;
-  min-width: 0; /* allows text truncation */
-}
-
-.chat-top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 3px;
-}
-
-.chat-name {
-  font-size: 1.05rem;
-  color: #111b21;
-  font-weight: 500; /* slightly bolder */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.chat-time {
-  font-size: 0.75rem;
-  color: #667781;
-  flex-shrink: 0;
-}
-
-.chat-bottom-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.chat-last-message {
-  font-size: 0.85rem;
-  color: #667781;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-}
-
-.unread-badge {
-  background-color: #25d366;
-  color: white;
-  border-radius: 50%;
-  font-size: 0.75rem;
-  font-weight: 500;
-  min-width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 6px;
-  flex-shrink: 0;
-}
-
 .loading-spinner {
   display: flex;
   justify-content: center;
-  padding: 10px;
+  padding: 20px;
 }
 
 .spinner-icon {
@@ -401,11 +341,23 @@ const formatTime = (isoString) => {
   to { transform: rotate(360deg); }
 }
 
-.end-of-list {
-  text-align: center;
-  padding: 15px;
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
   color: #667781;
-  font-size: 0.85rem;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 0.95rem;
 }
 
 @media (max-width: 900px) {

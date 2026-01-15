@@ -80,6 +80,11 @@ const urls = [
   {
     to: '/contacts',
     name: 'Contacts',
+    icon: 'bi bi-person-lines-fill icon',
+  },
+  {
+    to: '/groups',
+    name: 'Groupes',
     icon: 'bi bi-people icon',
   },
   {

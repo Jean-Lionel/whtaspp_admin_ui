@@ -1,5 +1,7 @@
 import { createStore } from 'vuex'
-import { post } from '@/config/axios'
+import { post, get } from '@/config/axios'
+import contacts from './modules/contacts'
+import groups from './modules/groups'
 
 export default createStore({
   state: {
@@ -8,6 +10,7 @@ export default createStore({
       contacts: [],
       chatsContacts: [],
       messages_chats: [],
+      sidebarItems: [],
     },
     user: JSON.parse(localStorage.getItem('user') || 'null'),
     token: localStorage.getItem('token') || null,
@@ -16,6 +19,7 @@ export default createStore({
     isAuthenticated: (state) => !!state.token,
     currenUser: (state) => state.user,
     userName: (state) => state.user?.name || 'Utilisateur',
+    sidebarItems: (state) => state.data.sidebarItems,
   },
   mutations: {
     SET_TOKEN(state, token) {
@@ -35,15 +39,15 @@ export default createStore({
     SET_DATA(state, data) {
       state.data = data
     },
+    SET_SIDEBAR_ITEMS(state, items) {
+      state.data.sidebarItems = items
+    },
   },
   actions: {
     async login({ commit }, credentials) {
       try {
         const response = await post('/login', credentials)
         const { user, token } = response.data
-
-        // Supposons que le token est dans response.data.token ou access_token.
-        // L'exemple utilisateur montre { user: {...}, token: "..." }
 
         commit('SET_USER', user)
         commit('SET_TOKEN', token)
@@ -55,8 +59,6 @@ export default createStore({
     },
     logout({ commit }) {
       commit('CLEAR_AUTH')
-      // Optionnel : appel API de logout server-side si nécessaire
-      // await post('/logout')
     },
     async getData({ commit }) {
       try {
@@ -67,6 +69,18 @@ export default createStore({
         throw error
       }
     },
+    async fetchSidebar({ commit }) {
+      try {
+        const response = await get('/sidebar')
+        commit('SET_SIDEBAR_ITEMS', response.data)
+        return response.data
+      } catch (error) {
+        throw error
+      }
+    },
   },
-  modules: {},
+  modules: {
+    contacts,
+    groups,
+  },
 })
