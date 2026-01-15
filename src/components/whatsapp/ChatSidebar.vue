@@ -23,21 +23,21 @@
       </div>
     </div>
 
-    <div class="chat-list">
+    <div class="chat-list" @scroll="handleScroll">
       <div 
         v-for="chat in filteredChats" 
-        :key="chat.id" 
+        :key="chat.id || chat.phone" 
         class="chat-item" 
         :class="{ active: selectedChat && selectedChat.id === chat.id }"
         @click="$emit('select-chat', chat)"
       >
         <div class="chat-avatar">
-          <img :src="chat.avatar || `https://ui-avatars.com/api/?name=${chat.name}&background=random`" alt="Avatar" />
+          <img :src="chat.avatar || `https://ui-avatars.com/api/?name=${chat.name || chat.phone}&background=random`" alt="Avatar" />
         </div>
         <div class="chat-info">
           <div class="chat-top-row">
-            <span class="chat-name">{{ chat.name }}</span>
-            <span class="chat-time">{{ chat.lastMessageTime }}</span>
+            <span class="chat-name">{{ chat.name || chat.phone }}</span>
+            <span class="chat-time">{{ formatTime(chat.lastMessageTime) }}</span>
           </div>
           <div class="chat-bottom-row">
             <span class="chat-last-message">{{ chat.lastMessage }}</span>
@@ -45,17 +45,29 @@
           </div>
         </div>
       </div>
+      <div v-if="loading" class="loading-spinner">
+        <svg viewBox="0 0 24 24" width="24" height="24" class="spinner-icon"><path fill="currentColor" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"></path></svg>
+      </div>
+      <div v-else-if="!hasMore && filteredChats.length > 0" class="end-of-list">
+        Fin de la liste
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import api from '@/config/axios';
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useStore } from 'vuex'
+
+const store = useStore();
+const searchQuery = ref('');
+const loading = ref(false);
+const hasMore = ref(true);
 
 const props = defineProps({
   chats: {
     type: Array,
-    required: true,
     default: () => []
   },
   selectedChat: {
@@ -66,14 +78,133 @@ const props = defineProps({
 
 defineEmits(['select-chat'])
 
-const searchQuery = ref('')
+onMounted(() => {
+  getChats();
+});
+
+const getChats = (page = 1) => {
+  loading.value = true;
+  api.get('/side_bar_contacts', {
+    params: {
+      page: page
+    }
+  })
+    .then(response => {
+      store.state.data.chatsContacts = response.data;
+      // Vérifier s'il y a plus de pages
+      hasMore.value = response.data.current_page < response.data.last_page;
+    })
+    .catch(error => {
+      console.error('Error fetching chats:', error);
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+}
+
+const chatsContacts = computed(() => {
+  return store.state.data.chatsContacts || {};
+})
 
 const filteredChats = computed(() => {
-  if (!searchQuery.value) return props.chats
-  return props.chats.filter(chat => 
-    chat.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
+  const sourceData = chatsContacts.value.data || [];
+
+  const formattedData = sourceData.map(chat => ({
+    ...chat,
+    id: chat.id || chat.phone,
+    name: chat.name,
+    phone: chat.phone,
+    lastMessage: chat.last_message,
+    lastMessageTime: chat.last_message_at,
+    unreadCount: chat.unread_count,
+    avatar: chat.avatar
+  }));
+
+  if (!searchQuery.value) return formattedData;
+
+  return formattedData.filter(chat => {
+    const term = searchQuery.value.toLowerCase();
+    const nameMatch = chat.name && chat.name.toLowerCase().includes(term);
+    const phoneMatch = chat.phone && chat.phone.includes(term);
+    return nameMatch || phoneMatch;
+  });
 })
+
+let scrollTimeout = null;
+const handleScroll = (e) => {
+  if (loading.value || !hasMore.value) return;
+  if (scrollTimeout) return;
+
+  scrollTimeout = setTimeout(() => {
+    const element = e.target;
+    // Check if close to bottom (100px threshold)
+    if (element.scrollHeight - element.scrollTop - element.clientHeight < 100) {
+      loadMoreChats();
+    }
+    scrollTimeout = null;
+  }, 100);
+}
+
+const loadMoreChats = () => {
+  if (loading.value || !hasMore.value) return;
+
+  const metadata = chatsContacts.value;
+  if (!metadata || !metadata.current_page) return;
+
+  const currentPage = parseInt(metadata.current_page);
+  const lastPage = parseInt(metadata.last_page);
+
+  // Stop if we are already at the last page
+  if (currentPage >= lastPage) {
+    hasMore.value = false;
+    return;
+  }
+
+  const nextPage = currentPage + 1;
+  console.log(`Loading page ${nextPage} of ${lastPage}`);
+
+  loading.value = true;
+
+  api.get("/side_bar_contacts", {
+    params: {
+      page: nextPage
+    }
+  })
+    .then(response => {
+      const newData = response.data;
+      const currentChats = store.state.data.chatsContacts.data || [];
+
+      console.log('Loaded new chats:', newData.data.length);
+
+      // Update store with new data and new metadata (e.g. current_page becomes 2, etc.)
+      store.state.data.chatsContacts = {
+        ...newData,
+        data: [...currentChats, ...newData.data]
+      };
+
+      // Mettre à jour hasMore
+      hasMore.value = newData.current_page < newData.last_page;
+    })
+    .catch(error => {
+      console.error("Error loading more chats", error);
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+}
+
+// Nettoyer le timeout au démontage
+onUnmounted(() => {
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout);
+  }
+})
+
+const formatTime = (isoString) => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 </script>
 
 <style scoped>
@@ -252,6 +383,29 @@ const filteredChats = computed(() => {
   justify-content: center;
   margin-left: 6px;
   flex-shrink: 0;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
+
+.spinner-icon {
+  animation: spin 1s linear infinite;
+  color: #25d366;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.end-of-list {
+  text-align: center;
+  padding: 15px;
+  color: #667781;
+  font-size: 0.85rem;
 }
 
 @media (max-width: 900px) {

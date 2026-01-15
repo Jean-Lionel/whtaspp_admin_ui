@@ -6,6 +6,8 @@ export default createStore({
     data: {
       whatsappData: [],
       contacts: [],
+      chatsContacts: [],
+      messages_chats: [],
     },
     user: JSON.parse(localStorage.getItem('user') || 'null'),
     token: localStorage.getItem('token') || null,
