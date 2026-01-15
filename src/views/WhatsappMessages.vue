@@ -10,9 +10,10 @@
       v-if="selectedChat"
       :chat="selectedChat"
       :messages="currentMessages"
-      :loading="loadingMessages"
+      :loading="loadingMessages || sendingMessage"
       @send-message="handleSendMessage"
       @send-template="handleSendTemplate"
+      @send-file="handleSendFile"
     />
 
     <EmptyChatState v-else />
@@ -134,6 +135,62 @@ const handleSendTemplate = async (data) => {
   } catch (error) {
     console.error('Erreur lors de l\'envoi du modèle:', error)
     alert('Erreur lors de l\'envoi du modèle')
+  } finally {
+    sendingMessage.value = false
+  }
+}
+
+const handleSendFile = async (data) => {
+  if (!selectedChat.value || sendingMessage.value) return
+
+  sendingMessage.value = true
+  const { file, caption } = data
+
+  try {
+    const formData = new FormData()
+    formData.append('to', selectedChat.value.phone)
+    formData.append('file', file)
+    
+    // Determine type roughly
+    let type = 'document'
+    if (file.type.startsWith('image/')) type = 'image'
+    else if (file.type.startsWith('video/')) type = 'video'
+    else if (file.type.startsWith('audio/')) type = 'audio'
+    
+    formData.append('type', type)
+    
+    if (caption) {
+      formData.append('caption', caption)
+    }
+
+    const response = await api.post('/send_whatsapp', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    if (response.data.success) {
+      if (response.data.message) {
+        currentMessages.value.push(response.data.message)
+        
+        // Mettre à jour la sidebar
+        let icon = '📄'
+        if (type === 'image') icon = '📷'
+        else if (type === 'video') icon = '🎥'
+        else if (type === 'audio') icon = '🎵'
+        
+        selectedChat.value.lastMessage = `${icon} ${caption || (type === 'document' ? file.name : type)}`
+        selectedChat.value.lastMessageTime = response.data.message.time
+      } else {
+        await loadMessages(selectedChat.value.phone)
+      }
+    } else {
+      console.error('Erreur WhatsApp File:', response.data.error)
+      alert('Erreur lors de l\'envoi du fichier: ' + (response.data.error || 'Erreur inconnue'))
+    }
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi du fichier:', error)
+    alert('Erreur lors de l\'envoi du fichier')
   } finally {
     sendingMessage.value = false
   }

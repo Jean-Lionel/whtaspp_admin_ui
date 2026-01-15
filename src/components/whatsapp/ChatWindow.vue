@@ -1,5 +1,11 @@
 <template>
   <div class="chat-window">
+    <input 
+      type="file" 
+      ref="fileInput" 
+      style="display: none" 
+      @change="handleFileSelect"
+    />
     <div class="chat-header">
       <div class="chat-avatar-header">
         <img :src="chat.avatar || `https://ui-avatars.com/api/?name=${chat.name || chat.phone}&background=random`" alt="Avatar" />
@@ -71,7 +77,7 @@
       <button class="icon-btn" @click="showTemplateModal = true" title="Envoyer un modèle">
         <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/></svg>
       </button>
-      <button class="icon-btn">
+      <button class="icon-btn" @click="triggerFileInput" title="Joindre un fichier">
         <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M1.816 15.556v.002c0 1.502.584 2.912 1.646 3.972s2.472 1.646 3.972 1.646h13.556c.506 0 .917-.411.917-.917v-13.556c0-.506-.411-.917-.917-.917H7.434c-1.503 0-2.913.584-3.972 1.646s-1.646 2.472-1.646 3.972zM13.424 7.429c.635 0 1.15.515 1.15 1.15s-.515 1.15-1.15 1.15-1.15-.515-1.15-1.15.515-1.15 1.15-1.15zM8.819 7.429c.635 0 1.15.515 1.15 1.15s-.515 1.15-1.15 1.15-1.15-.515-1.15-1.15.515-1.15 1.15-1.15zm6.547 10.97H7.434c-1.013 0-1.965-.394-2.678-1.11s-1.111-1.666-1.111-2.678v-.002c0-1.013.394-1.966 1.111-2.679s1.666-1.11 2.678-1.11h8.133v7.579z"></path></svg>
       </button>
       <div class="input-container">
@@ -93,12 +99,20 @@
       @close="showTemplateModal = false"
       @send-template="handleSendTemplate"
     />
+    <!-- File Preview Modal -->
+    <FilePreviewModal
+      :is-open="showFilePreview"
+      :file="selectedFile"
+      @close="showFilePreview = false"
+      @send="handleSendPreview"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, nextTick, watch, onMounted } from 'vue'
 import TemplateModal from './TemplateModal.vue'
+import FilePreviewModal from './FilePreviewModal.vue'
 
 const props = defineProps({
   chat: {
@@ -115,11 +129,14 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['send-message', 'send-template'])
+const emit = defineEmits(['send-message', 'send-template', 'send-file'])
 
 const newMessage = ref('')
 const messagesContainer = ref(null)
+const fileInput = ref(null)
 const showTemplateModal = ref(false)
+const showFilePreview = ref(false)
+const selectedFile = ref(null)
 
 const handleSend = () => {
   if (!newMessage.value.trim() || props.loading) return
@@ -129,6 +146,26 @@ const handleSend = () => {
 
 const handleSendTemplate = (data) => {
   emit('send-template', data)
+}
+
+const triggerFileInput = () => {
+  fileInput.value.click()
+}
+
+const handleFileSelect = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    selectedFile.value = file
+    showFilePreview.value = true
+    // Reset inputs value to allow selecting the same file again
+    event.target.value = ''
+  }
+}
+
+const handleSendPreview = (data) => {
+  emit('send-file', data) // data contains { file, caption }
+  showFilePreview.value = false
+  selectedFile.value = null
 }
 
 const scrollToBottom = async () => {
