@@ -2,15 +2,15 @@
   <div class="chat-window">
     <div class="chat-header">
       <div class="chat-avatar-header">
-         <img :src="chat.avatar || `https://ui-avatars.com/api/?name=${chat.name}&background=random`" alt="Avatar" />
+        <img :src="chat.avatar || `https://ui-avatars.com/api/?name=${chat.name || chat.phone}&background=random`" alt="Avatar" />
       </div>
       <div class="chat-header-info">
-        <div class="chat-header-name">{{ chat.name }}</div>
-        <div class="chat-header-status">cliquez ici pour les infos du contact</div>
+        <div class="chat-header-name">{{ chat.name || chat.phone }}</div>
+        <div class="chat-header-status">{{ chat.phone }}</div>
       </div>
       <div class="header-icons">
         <button class="icon-btn">
-           <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M15.9 14.3H15l-.3-.3c1-1.1 1.6-2.7 1.6-4.3 0-3.7-3-6.7-6.7-6.7S3 6 3 9.7s3 6.7 6.7 6.7c1.6 0 3.2-.6 4.3-1.6l.3.3v.9l5.1 5.1 1.5-1.5-5-5.1zm-6.2 0c-2.6 0-4.6-2.1-4.6-4.6s2.1-4.6 4.6-4.6 4.6 2.1 4.6 4.6-2 4.6-4.6 4.6z"></path></svg>
+          <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M15.9 14.3H15l-.3-.3c1-1.1 1.6-2.7 1.6-4.3 0-3.7-3-6.7-6.7-6.7S3 6 3 9.7s3 6.7 6.7 6.7c1.6 0 3.2-.6 4.3-1.6l.3.3v.9l5.1 5.1 1.5-1.5-5-5.1zm-6.2 0c-2.6 0-4.6-2.1-4.6-4.6s2.1-4.6 4.6-4.6 4.6 2.1 4.6 4.6-2 4.6-4.6 4.6z"></path></svg>
         </button>
         <button class="icon-btn">
           <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M12 7a2 2 0 1 0-.001-4.001A2 2 0 0 0 12 7zm0 2a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 9zm0 6a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 15z"></path></svg>
@@ -19,22 +19,49 @@
     </div>
 
     <div class="chat-messages" ref="messagesContainer">
-      <div 
-        v-for="msg in chat.messages" 
-        :key="msg.id" 
-        class="message-wrapper" 
-        :class="{ 'message-out': msg.isMine, 'message-in': !msg.isMine }"
-      >
-        <div class="message-bubble">
-          <div class="message-text">{{ msg.text }}</div>
-          <div class="message-meta">
-            <span class="message-time">{{ msg.time }}</span>
-            <span v-if="msg.isMine" class="message-status">
-              <svg viewBox="0 0 16 15" width="16" height="15" class=""><path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.473-.018l5.358-7.717a.42.42 0 0 0-.063-.518z"></path><path fill="currentColor" d="M6.8 12.048L1.616 7.076a.42.42 0 0 0-.546-.057l-.46.398a.364.364 0 0 0-.075.526l6.303 6.96h.043L6.8 12.048z"></path></svg>
-            </span>
+      <!-- Loading state -->
+      <div v-if="loading" class="loading-messages">
+        <div class="spinner"></div>
+        <span>Chargement des messages...</span>
+      </div>
+
+      <!-- Messages list -->
+      <template v-else>
+        <div v-if="messages.length === 0" class="no-messages">
+          <p>Aucun message dans cette conversation</p>
+          <p class="hint">Envoyez un message pour commencer</p>
+        </div>
+
+        <div
+          v-for="msg in messages"
+          :key="msg.id"
+          class="message-wrapper"
+          :class="{ 'message-out': msg.isMine, 'message-in': !msg.isMine }"
+        >
+          <div class="message-bubble">
+            <div class="message-text">{{ msg.text }}</div>
+            <div class="message-meta">
+              <span class="message-time">{{ msg.time }}</span>
+              <span v-if="msg.isMine" class="message-status" :class="msg.status">
+                <!-- Double check for read -->
+                <svg v-if="msg.status === 'read'" viewBox="0 0 16 15" width="16" height="15" class="read">
+                  <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.473-.018l5.358-7.717a.42.42 0 0 0-.063-.518z"></path>
+                  <path fill="currentColor" d="M6.8 12.048L1.616 7.076a.42.42 0 0 0-.546-.057l-.46.398a.364.364 0 0 0-.075.526l6.303 6.96h.043L6.8 12.048z"></path>
+                </svg>
+                <!-- Double check for delivered -->
+                <svg v-else-if="msg.status === 'delivered'" viewBox="0 0 16 15" width="16" height="15" class="delivered">
+                  <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.473-.018l5.358-7.717a.42.42 0 0 0-.063-.518z"></path>
+                  <path fill="currentColor" d="M6.8 12.048L1.616 7.076a.42.42 0 0 0-.546-.057l-.46.398a.364.364 0 0 0-.075.526l6.303 6.96h.043L6.8 12.048z"></path>
+                </svg>
+                <!-- Single check for sent -->
+                <svg v-else viewBox="0 0 12 11" width="12" height="11" class="sent">
+                  <path fill="currentColor" d="M11.155 1.034l-.478-.372a.365.365 0 0 0-.51.063L4.813 7.597a.32.32 0 0 1-.484.033L2.97 6.305a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l2.37 2.266c.143.14.361.125.473-.018l6.268-8.037a.42.42 0 0 0-.063-.518z"></path>
+                </svg>
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
     </div>
 
     <div class="chat-input-area">
@@ -45,9 +72,15 @@
         <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M1.816 15.556v.002c0 1.502.584 2.912 1.646 3.972s2.472 1.646 3.972 1.646h13.556c.506 0 .917-.411.917-.917v-13.556c0-.506-.411-.917-.917-.917H7.434c-1.503 0-2.913.584-3.972 1.646s-1.646 2.472-1.646 3.972zM13.424 7.429c.635 0 1.15.515 1.15 1.15s-.515 1.15-1.15 1.15-1.15-.515-1.15-1.15.515-1.15 1.15-1.15zM8.819 7.429c.635 0 1.15.515 1.15 1.15s-.515 1.15-1.15 1.15-1.15-.515-1.15-1.15.515-1.15 1.15-1.15zm6.547 10.97H7.434c-1.013 0-1.965-.394-2.678-1.11s-1.111-1.666-1.111-2.678v-.002c0-1.013.394-1.966 1.111-2.679s1.666-1.11 2.678-1.11h8.133v7.579z"></path></svg>
       </button>
       <div class="input-container">
-        <input type="text" placeholder="Tapez un message" v-model="newMessage" @keyup.enter="handleSend" />
+        <input
+          type="text"
+          placeholder="Tapez un message"
+          v-model="newMessage"
+          @keyup.enter="handleSend"
+          :disabled="loading"
+        />
       </div>
-      <button class="icon-btn" @click="handleSend">
+      <button class="icon-btn send-btn" @click="handleSend" :disabled="loading || !newMessage.trim()">
         <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
       </button>
     </div>
@@ -61,6 +94,14 @@ const props = defineProps({
   chat: {
     type: Object,
     required: true
+  },
+  messages: {
+    type: Array,
+    default: () => []
+  },
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -70,7 +111,7 @@ const newMessage = ref('')
 const messagesContainer = ref(null)
 
 const handleSend = () => {
-  if (!newMessage.value.trim()) return
+  if (!newMessage.value.trim() || props.loading) return
   emit('send-message', newMessage.value)
   newMessage.value = ''
 }
@@ -82,9 +123,14 @@ const scrollToBottom = async () => {
   }
 }
 
-// Watch for changes in messages array (length) or if the chat itself changes
-watch(() => props.chat.messages.length, scrollToBottom)
+// Watch for changes in messages array
+watch(() => props.messages.length, scrollToBottom)
 watch(() => props.chat.id, scrollToBottom)
+watch(() => props.loading, (newVal, oldVal) => {
+  if (oldVal && !newVal) {
+    scrollToBottom()
+  }
+})
 
 onMounted(() => {
   scrollToBottom()
@@ -255,5 +301,72 @@ onMounted(() => {
   outline: none;
   font-size: 15px;
   max-height: 100px;
+}
+
+.input-container input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading state */
+.loading-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #667781;
+  gap: 15px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e9edef;
+  border-top-color: #25d366;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* No messages state */
+.no-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #667781;
+  text-align: center;
+}
+
+.no-messages p {
+  margin: 5px 0;
+}
+
+.no-messages .hint {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Message status icons */
+.message-status .read {
+  color: #53bdeb;
+}
+
+.message-status .delivered {
+  color: #667781;
+}
+
+.message-status .sent {
+  color: #667781;
 }
 </style>

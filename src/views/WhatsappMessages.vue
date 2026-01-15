@@ -1,133 +1,102 @@
 <template>
   <div class="whatsapp-layout">
-    <ChatSidebar 
-      :chats="chats" 
-      :selectedChat="selectedChat" 
+    <ChatSidebar
+      :chats="chats"
+      :selectedChat="selectedChat"
       @select-chat="handleSelectChat"
     />
-    
-    <ChatWindow 
-      v-if="selectedChat" 
-      :chat="selectedChat" 
+
+    <ChatWindow
+      v-if="selectedChat"
+      :chat="selectedChat"
+      :messages="currentMessages"
+      :loading="loadingMessages"
       @send-message="handleSendMessage"
     />
-    
+
     <EmptyChatState v-else />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { useStore } from 'vuex'
 import ChatSidebar from '@/components/whatsapp/ChatSidebar.vue'
 import ChatWindow from '@/components/whatsapp/ChatWindow.vue'
 import EmptyChatState from '@/components/whatsapp/EmptyChatState.vue'
 import api from '@/config/axios'
 
+
+const store = useStore()
+
+
 const selectedChat = ref(null)
+const currentMessages = ref([])
+const loadingMessages = ref(false)
+const sendingMessage = ref(false)
 
-// Mock Data
-const chats = ref([
-  {
-    id: 1,
-    name: 'Jean Dev',
-    lastMessage: 'On fait le point demain ?',
-    lastMessageTime: '10:30',
-    unreadCount: 2,
-    avatar: 'https://ui-avatars.com/api/?name=Jean+Dev&background=0D8ABC&color=fff',
-    messages: [
-      { id: 1, text: 'Salut, ça va ?', time: '10:00', isMine: false },
-      { id: 2, text: 'Ça va merci et toi ?', time: '10:01', isMine: true },
-      { id: 3, text: 'Super. Tu as avancé sur le ticket ?', time: '10:02', isMine: false },
-      { id: 4, text: 'Oui, presque fini.', time: '10:05', isMine: true },
-      { id: 5, text: 'On fait le point demain ?', time: '10:30', isMine: false }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Équipe Marketing',
-    lastMessage: 'Alice: Voici les visuels',
-    lastMessageTime: 'Hier',
-    unreadCount: 0,
-    avatar: 'https://ui-avatars.com/api/?name=Equipe+Marketing&background=25D366&color=fff',
-    messages: [
-      { id: 1, text: 'Bonjour tout le monde', time: '09:00', isMine: true },
-      { id: 2, text: 'Salut !', time: '09:05', isMine: false }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Client A',
-    lastMessage: 'Merci pour votre aide',
-    lastMessageTime: 'Lundi',
-    unreadCount: 0,
-    avatar: 'https://ui-avatars.com/api/?name=Client+A&background=random',
-    messages: [
-      { id: 1, text: 'J\'ai un problème de connexion', time: '14:00', isMine: false },
-      { id: 2, text: 'Je regarde ça tout de suite', time: '14:05', isMine: true },
-      { id: 3, text: 'C\'est réglé !', time: '14:15', isMine: true },
-      { id: 4, text: 'Merci pour votre aide', time: '14:16', isMine: false }
-    ]
-  },
-  {
-      id: 4,
-      name: 'Support Technique',
-      lastMessage: 'Ticket #4582 résolu',
-      lastMessageTime: 'Mardi',
-      unreadCount: 0,
-      avatar: 'https://ui-avatars.com/api/?name=Support+Tech&background=FF5722&color=fff',
-      messages: []
-  },
-  {
-      id: 5,
-      name: 'Famille',
-      lastMessage: 'Bon anniversaire !',
-      lastMessageTime: '01/01/2026',
-      unreadCount: 5,
-      avatar: 'https://ui-avatars.com/api/?name=Famille&background=9C27B0&color=fff',
-      messages: []
-  }
-])
+// Liste des chats (sera remplie par ChatSidebar)
+const chats = ref([])
 
-const handleSelectChat = (chat) => {
+
+
+
+
+
+// Son de notification (optionnel)
+
+
+const handleSelectChat = async (chat) => {
   selectedChat.value = chat
-  chat.unreadCount = 0 // Mark as read
+  chat.unreadCount = 0
+
+  // Charger les messages de ce contact
+  await loadMessages(chat.phone)
 }
 
-const handleSendMessage = (text) => {
-  if (!selectedChat.value) return
-  
-  const now = new Date()
-  const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
-  
-  // Format des données pour le backend (Payload)
-  const messagePayload = {
-    chat_id: selectedChat.value.id,
-    content: text,
-    timestamp: now.toISOString(),
-    sender_id: 1, // ID de l'admin
-    type: 'text'
+const loadMessages = async (phone) => {
+  loadingMessages.value = true
+  currentMessages.value = []
+
+  try {
+    const response = await api.get(`/message_phone/${encodeURIComponent(phone)}`)
+    currentMessages.value = response.data.messages.data || []
+  } catch (error) {
+    console.error('Erreur lors du chargement des messages:', error)
+  } finally {
+    loadingMessages.value = false
   }
+}
 
-  api.post('/messages', messagePayload)
-    .then(response => {
-      console.log('Message envoyé avec succès:', response.data)
-    })
-    .catch(error => {
-      console.error('Erreur lors de l\'envoi du message:', error)
+const handleSendMessage = async (text) => {
+  if (!selectedChat.value || sendingMessage.value) return
+
+  sendingMessage.value = true
+
+  try {
+    const response = await api.post('/send_whatsapp', {
+      to: selectedChat.value.phone,
+      message: text,
+      type: 'text'
     })
 
-  console.log('Payload prêt pour le backend:', messagePayload)
-  
-  selectedChat.value.messages.push({
-    id: Date.now(),
-    text: messagePayload.content,
-    time: timeString,
-    isMine: true
-  })
-  
-  // Update last message in sidebar
-  selectedChat.value.lastMessage = text
-  selectedChat.value.lastMessageTime = timeString
+    if (response.data.success) {
+      // Ajouter le message à la liste
+      currentMessages.value.push(response.data.message)
+
+      // Mettre à jour le dernier message dans la sidebar
+      selectedChat.value.lastMessage = text
+      selectedChat.value.lastMessageTime = response.data.message.time
+    } else {
+      console.error('Erreur WhatsApp:', response.data.error)
+      alert('Erreur lors de l\'envoi: ' + response.data.error)
+    }
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi du message:', error)
+    alert('Erreur lors de l\'envoi du message')
+  } finally {
+    sendingMessage.value = false
+  }
 }
 </script>
 
