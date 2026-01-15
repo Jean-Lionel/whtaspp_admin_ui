@@ -11,6 +11,8 @@ export default createStore({
       chatsContacts: [],
       messages_chats: [],
       sidebarItems: [],
+      sidebarData : [],
+      templates: [],
     },
     user: JSON.parse(localStorage.getItem('user') || 'null'),
     token: localStorage.getItem('token') || null,
@@ -41,6 +43,10 @@ export default createStore({
     },
     SET_SIDEBAR_ITEMS(state, items) {
       state.data.sidebarItems = items
+    },
+    ADD_SIDEBAR_ITEM(state, item) {
+      if (!state.data.sidebarItems) state.data.sidebarItems = []
+      state.data.sidebarItems.unshift(item)
     },
   },
   actions: {
@@ -75,7 +81,23 @@ export default createStore({
         commit('SET_SIDEBAR_ITEMS', response.data)
         return response.data
       } catch (error) {
-        throw error
+        console.error('Error fetching sidebar:', error)
+        // Fallback to old endpoint if new one not available
+        try {
+          const fallbackResponse = await get('/side_bar_contacts')
+          const mappedData = (fallbackResponse.data.data || []).map(item => ({
+            ...item,
+            type: 'contact',
+            last_message: item.last_message,
+            last_message_at: item.last_message_at,
+            unread_count: item.unread_count
+          }))
+          commit('SET_SIDEBAR_ITEMS', mappedData)
+          return mappedData
+        } catch (fallbackError) {
+          console.error('Fallback also failed:', fallbackError)
+          throw fallbackError
+        }
       }
     },
   },

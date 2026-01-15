@@ -57,6 +57,16 @@ const routes = [
         name: 'Blogs',
         component: BlogPage,
       },
+      {
+        path: 'templates',
+        name: 'Templates',
+        component: () => import('@/views/Templates.vue'),
+      },
+      {
+        path: 'send-files',
+        name: 'FileSender',
+        component: () => import('@/views/FileSender.vue'),
+      },
     ],
   },
   {

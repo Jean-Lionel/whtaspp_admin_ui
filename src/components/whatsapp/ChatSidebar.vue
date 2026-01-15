@@ -57,7 +57,7 @@
         @click="handleSelectItem"
       />
 
-      <div v-if="loading" class="loading-spinner">
+      <div v-if="loading && filteredItems.length === 0" class="loading-spinner">
         <svg viewBox="0 0 24 24" width="24" height="24" class="spinner-icon"><path fill="currentColor" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"></path></svg>
       </div>
 
@@ -80,7 +80,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import api from '@/config/axios'
 import SidebarItem from './SidebarItem.vue'
 import GroupCreateModal from './GroupCreateModal.vue'
 
@@ -90,7 +89,7 @@ const searchQuery = ref('')
 const loading = ref(false)
 const activeFilter = ref('all')
 const showCreateGroup = ref(false)
-const sidebarData = ref([])
+//const sidebarData = ref([])
 
 const props = defineProps({
   selectedChat: {
@@ -108,30 +107,16 @@ onMounted(() => {
 const fetchSidebarData = async () => {
   loading.value = true
   try {
-    const response = await api.get('/sidebar')
-    sidebarData.value = response.data
+    await store.dispatch('fetchSidebar')
   } catch (error) {
     console.error('Error fetching sidebar:', error)
-    // Fallback to old endpoint if new one not available
-    try {
-      const fallbackResponse = await api.get('/side_bar_contacts')
-      sidebarData.value = (fallbackResponse.data.data || []).map(item => ({
-        ...item,
-        type: 'contact',
-        last_message: item.last_message,
-        last_message_at: item.last_message_at,
-        unread_count: item.unread_count
-      }))
-    } catch (fallbackError) {
-      console.error('Fallback also failed:', fallbackError)
-    }
   } finally {
     loading.value = false
   }
 }
 
 const filteredItems = computed(() => {
-  let items = sidebarData.value || []
+  let items = store.getters.sidebarItems || []
 
   // Filter by type
   if (activeFilter.value === 'contacts') {
@@ -179,7 +164,7 @@ const handleSelectItem = (item) => {
 const handleGroupCreated = (group) => {
   showCreateGroup.value = false
   // Add the new group to the sidebar
-  sidebarData.value.unshift({
+  store.commit('ADD_SIDEBAR_ITEM', {
     ...group,
     type: 'group',
     last_message: null,

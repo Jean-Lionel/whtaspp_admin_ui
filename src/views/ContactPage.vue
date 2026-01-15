@@ -20,7 +20,7 @@
     </div>
 
     <div class="table-container">
-      <div v-if="loading" class="loading-state">
+      <div v-if="loading && contacts.data.length === 0" class="loading-state">
         <div class="spinner"></div>
       </div>
 
@@ -51,6 +51,9 @@
               </button>
               <button class="btn-icon delete" @click="deleteContact(contact.id)">
                 <i class="bi bi-trash-fill"></i>
+              </button>
+              <button class="btn-icon send-file" title="Send File" @click="$router.push(`/send-files?type=contact&id=${contact.id}`)">
+                <i class="bi bi-file-earmark-arrow-up"></i>
               </button>
             </td>
           </tr>

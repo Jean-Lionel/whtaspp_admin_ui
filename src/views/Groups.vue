@@ -10,7 +10,7 @@
 
     <div class="groups-container">
       <!-- Loading state -->
-      <div v-if="loading" class="loading-state">
+      <div v-if="loading && groups.length === 0" class="loading-state">
         <i class="bi bi-arrow-repeat spinner"></i>
         <p>Chargement des groupes...</p>
       </div>

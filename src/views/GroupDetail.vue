@@ -26,6 +26,9 @@
           <button class="action-btn" @click="showEditModal = true" title="Modifier">
             <i class="bi bi-pencil"></i>
           </button>
+          <button class="action-btn" @click="$router.push(`/send-files?type=group&id=${group.id}`)" title="Envoyer un fichier">
+            <i class="bi bi-file-earmark-arrow-up"></i>
+          </button>
         </div>
       </div>
 
@@ -78,7 +81,7 @@
           </div>
 
           <div class="messages-container" ref="messagesContainer">
-            <div v-if="messagesLoading" class="loading-messages">
+            <div v-if="messagesLoading && messages.length === 0" class="loading-messages">
               <i class="bi bi-arrow-repeat spinner"></i>
             </div>
             <div v-else-if="messages.length === 0" class="no-messages">

@@ -2,9 +2,7 @@ import axios from 'axios'
 
 // Création de l'instance Axios avec l'URL de base définie dans le fichier .env
 const api = axios.create({
-  baseURL: import.meta.env.VITE_LOCALE_MODE
-    ? import.meta.env.VITE_APP_LOCAL_URL
-    : import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_LOCALE_MODE == 'true' ? import.meta.env.VITE_APP_LOCAL_URL : import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

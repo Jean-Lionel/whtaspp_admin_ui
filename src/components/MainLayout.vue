@@ -92,6 +92,16 @@ const urls = [
     name: 'Blogs',
     icon: 'bi bi-file-text icon',
   },
+  {
+    to: '/templates',
+    name: 'Templates',
+    icon: 'bi bi-layout-text-window-reverse icon',
+  },
+  {
+    to: '/send-files',
+    name: 'Envoyer Fichiers',
+    icon: 'bi bi-send-plus icon',
+  },
 ]
 
 // State
