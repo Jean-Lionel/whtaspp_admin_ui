@@ -144,7 +144,7 @@ const handleSendFile = async (data) => {
   if (!selectedChat.value || sendingMessage.value) return
 
   sendingMessage.value = true
-  const { file, caption } = data
+  const { file, message } = data
 
   try {
     const formData = new FormData()
@@ -159,8 +159,8 @@ const handleSendFile = async (data) => {
     
     formData.append('type', type)
     
-    if (caption) {
-      formData.append('caption', caption)
+    if (message) {
+      formData.append('message', message)
     }
 
     const response = await api.post('/send_whatsapp', formData, {
@@ -179,7 +179,7 @@ const handleSendFile = async (data) => {
         else if (type === 'video') icon = '🎥'
         else if (type === 'audio') icon = '🎵'
         
-        selectedChat.value.lastMessage = `${icon} ${caption || (type === 'document' ? file.name : type)}`
+        selectedChat.value.lastMessage = `${icon} ${message || (type === 'document' ? file.name : type)}`
         selectedChat.value.lastMessageTime = response.data.message.time
       } else {
         await loadMessages(selectedChat.value.phone)

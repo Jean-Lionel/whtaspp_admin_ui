@@ -163,7 +163,7 @@ const handleFileSelect = (event) => {
 }
 
 const handleSendPreview = (data) => {
-  emit('send-file', data) // data contains { file, caption }
+  emit('send-file', data) // data contains { file, message }
   showFilePreview.value = false
   selectedFile.value = null
 }

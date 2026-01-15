@@ -20,8 +20,8 @@
         <div class="caption-input">
           <input 
             type="text" 
-            v-model="caption" 
-            placeholder="Ajouter une légende..."
+            v-model="message" 
+            placeholder="Ajouter un message..."
             @keyup.enter="handleSend"
           />
         </div>
@@ -47,7 +47,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'send'])
 
-const caption = ref('')
+const message = ref('')
 const previewUrl = ref(null)
 
 const isImage = computed(() => props.file?.type.startsWith('image/'))
@@ -62,8 +62,8 @@ const formatSize = (bytes) => {
 }
 
 const handleSend = () => {
-  emit('send', { file: props.file, caption: caption.value })
-  caption.value = '' // Reset caption
+  emit('send', { file: props.file, message: message.value })
+  message.value = '' // Reset message
 }
 
 watch(() => props.file, (newFile) => {
@@ -75,7 +75,7 @@ watch(() => props.file, (newFile) => {
   if (newFile) {
     previewUrl.value = URL.createObjectURL(newFile)
   }
-  caption.value = ''
+  message.value = ''
 }, { immediate: true })
 
 onUnmounted(() => {
