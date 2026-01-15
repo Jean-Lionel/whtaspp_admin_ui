@@ -12,6 +12,7 @@
       :messages="currentMessages"
       :loading="loadingMessages"
       @send-message="handleSendMessage"
+      @send-template="handleSendTemplate"
     />
 
     <EmptyChatState v-else />
@@ -94,6 +95,45 @@ const handleSendMessage = async (text) => {
   } catch (error) {
     console.error('Erreur lors de l\'envoi du message:', error)
     alert('Erreur lors de l\'envoi du message')
+  } finally {
+    sendingMessage.value = false
+  }
+}
+
+const handleSendTemplate = async (data) => {
+  if (!selectedChat.value || sendingMessage.value) return
+
+  sendingMessage.value = true
+
+  try {
+    const response = await api.post('/send_whatsapp', {
+      to: selectedChat.value.phone,
+      type: 'template',
+      template_name: data.template.name,
+      language: data.template.language,
+      parameters: data.parameters
+    })
+
+    if (response.data.success) {
+      // Ajouter le message à la liste s'il est renvoyé
+      if (response.data.message) {
+        currentMessages.value.push(response.data.message)
+        
+        // Mettre à jour la sidebar
+        selectedChat.value.lastMessage = `Modèle: ${data.template.name}`
+        selectedChat.value.lastMessageTime = response.data.message.time
+      } else {
+        // Fallback si l'API ne retourne pas le message formate
+        // On pourrait recharger les messages ou ajouter un placeholder
+        await loadMessages(selectedChat.value.phone)
+      }
+    } else {
+      console.error('Erreur WhatsApp Template:', response.data.error)
+      alert('Erreur lors de l\'envoi du modèle: ' + (response.data.error || 'Erreur inconnue'))
+    }
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi du modèle:', error)
+    alert('Erreur lors de l\'envoi du modèle')
   } finally {
     sendingMessage.value = false
   }

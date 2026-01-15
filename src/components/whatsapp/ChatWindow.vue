@@ -30,6 +30,9 @@
         <div v-if="messages.length === 0" class="no-messages">
           <p>Aucun message dans cette conversation</p>
           <p class="hint">Envoyez un message pour commencer</p>
+          <button class="action-btn" @click="showTemplateModal = true">
+            Envoyer un modèle
+          </button>
         </div>
 
         <div
@@ -65,8 +68,8 @@
     </div>
 
     <div class="chat-input-area">
-      <button class="icon-btn">
-        <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M9.153 11.603c.795 0 1.439-.879 1.439-1.962s-.644-1.962-1.439-1.962-1.439.879-1.439 1.962.644 1.962 1.439 1.962zm-3.204 1.362c-.026-.307-.131 5.218 6.063 5.551 6.066-.25 6.066-5.551 6.066-5.551-6.062 0-6.062 0-12.129 0zm11.363 1.108s-.669 1.959-5.051 1.959c-3.505 0-5.388-1.164-5.607-1.959 0 0 5.912 1.055 10.658 0zM11.804 1.011C5.609 1.011.978 6.033.978 12.228s4.826 10.761 11.021 10.761S23.02 18.423 23.02 12.228c.001-6.195-5.021-11.217-11.216-11.217zM12 21.354c-5.273 0-9.381-3.886-9.381-9.159s3.942-9.548 9.215-9.548 9.548 4.275 9.548 9.548c-.001 5.272-4.112 9.159-9.382 9.159zm3.108-9.751c.795 0 1.439-.879 1.439-1.962s-.644-1.962-1.439-1.962-1.439.879-1.439 1.962.644 1.962 1.439 1.962z"></path></svg>
+      <button class="icon-btn" @click="showTemplateModal = true" title="Envoyer un modèle">
+        <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/></svg>
       </button>
       <button class="icon-btn">
         <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M1.816 15.556v.002c0 1.502.584 2.912 1.646 3.972s2.472 1.646 3.972 1.646h13.556c.506 0 .917-.411.917-.917v-13.556c0-.506-.411-.917-.917-.917H7.434c-1.503 0-2.913.584-3.972 1.646s-1.646 2.472-1.646 3.972zM13.424 7.429c.635 0 1.15.515 1.15 1.15s-.515 1.15-1.15 1.15-1.15-.515-1.15-1.15.515-1.15 1.15-1.15zM8.819 7.429c.635 0 1.15.515 1.15 1.15s-.515 1.15-1.15 1.15-1.15-.515-1.15-1.15.515-1.15 1.15-1.15zm6.547 10.97H7.434c-1.013 0-1.965-.394-2.678-1.11s-1.111-1.666-1.111-2.678v-.002c0-1.013.394-1.966 1.111-2.679s1.666-1.11 2.678-1.11h8.133v7.579z"></path></svg>
@@ -84,11 +87,18 @@
         <svg viewBox="0 0 24 24" width="24" height="24" class=""><path fill="currentColor" d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
       </button>
     </div>
+    <!-- Template Modal -->
+    <TemplateModal 
+      :is-open="showTemplateModal" 
+      @close="showTemplateModal = false"
+      @send-template="handleSendTemplate"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, nextTick, watch, onMounted } from 'vue'
+import TemplateModal from './TemplateModal.vue'
 
 const props = defineProps({
   chat: {
@@ -105,15 +115,20 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['send-message'])
+const emit = defineEmits(['send-message', 'send-template'])
 
 const newMessage = ref('')
 const messagesContainer = ref(null)
+const showTemplateModal = ref(false)
 
 const handleSend = () => {
   if (!newMessage.value.trim() || props.loading) return
   emit('send-message', newMessage.value)
   newMessage.value = ''
+}
+
+const handleSendTemplate = (data) => {
+  emit('send-template', data)
 }
 
 const scrollToBottom = async () => {
@@ -368,5 +383,21 @@ onMounted(() => {
 
 .message-status .sent {
   color: #667781;
+}
+
+.action-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #00a884;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+  background-color: #008f6f;
 }
 </style>
